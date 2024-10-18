@@ -1,0 +1,35 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Food {
+  address: String!
+  id: Int!
+  image: String
+  name: String!
+  price: Float!
+  userId: Int!
+}
+
+input LoginDto {
+  email: String!
+  password: String!
+}
+
+type Mutation {
+  createFood(address: String!, image: String!, name: String!, price: Float!, userId: Float!): Food!
+  deleteFood(id: Int!, userId: Int!): Boolean!
+  login(data: LoginDto!): String!
+  signup(data: SignupDto!): String!
+  updateFood(address: String, id: Int!, image: String, name: String, price: Float, userId: Int!): Food!
+}
+
+type Query {
+  getAllFoods(userId: Float!): [Food!]!
+  getFoodById(id: Int!, userId: Int!): Food
+}
+
+input SignupDto {
+  email: String!
+  password: String!
+}

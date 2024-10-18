@@ -1,39 +1,70 @@
-import { Resolver, Query, Mutation, Args, Context } from '@nestjs/graphql';
-import { UseGuards } from '@nestjs/common';
-import { FoodNotesService } from './food.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { FoodNote, CreateFoodNoteInput, UpdateFoodNoteInput } from './food.model';
+import { Resolver, Query, Mutation, Args, Int, Float } from '@nestjs/graphql';
+import { FoodService } from './food.service';
+import { Food } from '../models/food.model';
 
-@Resolver(() => FoodNote)
-@UseGuards(JwtAuthGuard)
-export class FoodNotesResolver {
-  constructor(private foodNotesService: FoodNotesService) {}
+@Resolver(() => Food)
+export class FoodResolver {
+  constructor(private readonly foodService: FoodService) {}
 
-  @Query(() => [FoodNote])
-  async foodNotes(@Context() context) {
-    return this.foodNotesService.findAll(context.req.user.userId);
+  // Get all foods for a specific user
+  @Query(() => [Food])
+  getAllFoods(@Args('userId') userId: number) {
+    return this.foodService.getAllFoods(userId);
   }
 
-  @Mutation(() => FoodNote)
-  async createFoodNote(
-    @Args('input') createFoodNoteInput: CreateFoodNoteInput,
-    @Context() context
+  // Get food by its ID
+  @Query(() => Food, { nullable: true })
+  getFoodById(
+    @Args('id', { type: () => Int }) id: number,
+    @Args('userId', { type: () => Int }) userId: number,
   ) {
-    return this.foodNotesService.create(context.req.user.userId, createFoodNoteInput);
+    return this.foodService.getFoodById(id, userId);
   }
 
-  @Mutation(() => FoodNote)
-  async updateFoodNote(
-    @Args('id') id: number,
-    @Args('input') updateFoodNoteInput: UpdateFoodNoteInput,
-    @Context() context
+  // Create a new food entry
+  @Mutation(() => Food)
+  createFood(
+    @Args('name') name: string,
+    @Args('price') price: number,
+    @Args('address') address: string,
+    @Args('userId') userId: number,
+    @Args('image') image: string,
   ) {
-    return this.foodNotesService.update(id, context.req.user.userId, updateFoodNoteInput);
+    return this.foodService.createFood({
+      name,
+      price,
+      address,
+      image,
+      user: {
+        connect: { id: userId }, // Connect the food with the user via userId
+      },
+    });
   }
 
+  // Update an existing food entry
+  @Mutation(() => Food)
+  updateFood(
+    @Args('id', { type: () => Int }) id: number,
+    @Args('userId', { type: () => Int }) userId: number,
+    @Args('name', { type: () => String, nullable: true }) name?: string,
+    @Args('price', { type: () => Float, nullable: true }) price?: number,
+    @Args('address', { type: () => String, nullable: true }) address?: string,
+    @Args('image', { type: () => String, nullable: true }) image?: string,
+  ) {
+    return this.foodService.updateFood(id, userId, {
+      name,
+      price,
+      address,
+      image,
+    });
+  }
+
+  // Delete a food entry
   @Mutation(() => Boolean)
-  async deleteFoodNote(@Args('id') id: number, @Context() context) {
-    await this.foodNotesService.delete(id, context.req.user.userId);
-    return true;
+  deleteFood(
+    @Args('id', { type: () => Int }) id: number,
+    @Args('userId', { type: () => Int }) userId: number,
+  ) {
+    return this.foodService.deleteFood(id, userId);
   }
 }
